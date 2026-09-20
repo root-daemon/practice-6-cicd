@@ -1,0 +1,32 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify static site
+        run: test -f index.html
+
+      - name: Display build message
+        run: echo "Build Success!"
+
+      - name: Notify Slack
+        if: ${{ success() && env.SLACK_WEBHOOK_URL != '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl --fail --show-error --silent \
+            --request POST \
+            --header 'Content-type: application/json' \
+            --data '{"text":"Build Completed Successfully!"}' \
+            "$SLACK_WEBHOOK_URL"
